@@ -17,3 +17,8 @@ ansible-playbook -i inventory/hosts.yml playbook.yml -K
 
 ## Kubespray with Ansible
 
+
+- Clone the main kubespray repo with ansible playbooks and roles
+
+- Do the steps to install kubespray
+
