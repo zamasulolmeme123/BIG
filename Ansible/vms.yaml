@@ -1,0 +1,33 @@
+- name: Configure VM's
+  hosts: all
+  tasks:
+    - name: Update and install dependencies
+      package:
+        name:
+          - curl
+          - wget
+          - git
+          - net-tools
+          - chrony  # NTP
+        state: present
+    
+    - name: Disable swap
+      systemd:
+        name: swap.target
+        state: stopped
+        enabled: false
+    
+    - name: Configure static IP
+      copy:
+        content: |
+          network:
+            version: 2
+            ethernets:
+              enp0s3:
+                dhcp4: no
+                addresses: [192.168.1.10/24]
+                gateway4: 192.168.1.1
+        dest: /etc/netplan/01-static.yaml
+    
+    - name: Apply network config
+      shell: netplan apply

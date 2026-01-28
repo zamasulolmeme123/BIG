@@ -1,2 +1,8 @@
 # BIG
-k3s cluster with argocd , vault, etc...
+kubespray cluster with argocd , vault, etc...
+
+
+
+## Step 1: Ansible
+
+- configure our VM's and setup a kubespray cluster on it 
