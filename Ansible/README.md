@@ -13,3 +13,7 @@ ansible -i /inventory/inventory.yaml vms.yaml -K
 ansible-playbook -i inventory/hosts.yml playbook.yml -K
 ```
 
+
+
+## Kubespray with Ansible
+
