@@ -1,33 +1,75 @@
-- name: Configure VM's
+---
+- name: Prepare Kubernetes nodes
   hosts: all
+  become: yes
   tasks:
-    - name: Update and install dependencies
-      package:
+    # Обновляем систему
+    - name: Update and upgrade packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+        autoremove: yes
+
+    # Ставим зависимости
+    - name: Install dependencies
+      apt:
         name:
           - curl
           - wget
           - git
           - net-tools
-          - chrony  # NTP
+          - chrony
+          - apt-transport-https
+          - ca-certificates
         state: present
-    
+
+    # Отключаем SWAP 
     - name: Disable swap
       systemd:
         name: swap.target
         state: stopped
         enabled: false
+        masked: yes
     
-    - name: Configure static IP
+    # Настройка статических IP
+    - name: Configure static IP - Master
       copy:
         content: |
           network:
             version: 2
+            renderer: networkd
+            ethernets:
+              enp0s3:  # <-- ПРОВЕРЬ ИМЯ ИНТЕРФЕЙСА! (ip a)
+                dhcp4: no
+                addresses: # VM ip + /24
+                gateway4: # IP роутера
+                nameservers:
+                  addresses: [8.8.8.8, 8.8.4.4]
+        dest: /etc/netplan/01-netcfg.yaml
+      when: inventory_hostname == 'master'
+
+    - name: Configure static IP - Worker
+      copy:
+        content: |
+          network:
+            version: 2
+            renderer: networkd
             ethernets:
               enp0s3:
                 dhcp4: no
-                addresses: [192.168.1.10/24]
-                gateway4: 192.168.1.1
-        dest: /etc/netplan/01-static.yaml
-    
-    - name: Apply network config
+                addresses: # [VM ip + /24]
+                nameservers:
+                  addresses: [8.8.8.8, 8.8.4.4]
+        dest: /etc/netplan/01-netcfg.yaml
+      when: inventory_hostname == 'worker'
+
+    # Применяем сетевые настройки
+    - name: Apply netplan
       shell: netplan apply
+      ignore_errors: yes
+
+    # Проверяем сеть
+    - name: Test connectivity
+      shell: ping -c 3 8.8.8.8
+      register: ping_result
+      failed_when: ping_result.rc != 0
