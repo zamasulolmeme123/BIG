@@ -22,3 +22,8 @@ ansible-playbook -i inventory/hosts.yml playbook.yml -K
 
 - Do the steps to install kubespray
 
+
+
+## Fix ip drift on control plane
+
+kubeadm reset && kubeadm init
